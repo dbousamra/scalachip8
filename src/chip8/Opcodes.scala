@@ -1,4 +1,5 @@
 package chip8
+import scala.util.Random
 
 class Opcodes(cpu: Cpu) {
   import cpu._
@@ -31,7 +32,7 @@ class Opcodes(cpu: Cpu) {
     case 0xA000 => opcodeANNN(opcode)
     case 0xB000 => opcodeBNNN(opcode)
     case 0xC000 => opcodeCXNN(opcode)
-    case 0xD000 => None
+    case 0xD000 => opcodeDXYN(opcode)
     case 0xE000 => opcode & 0xF match {
       case 0xE => opcodeEX9E(opcode)
       case 0x1 => opcodeEXA1(opcode)
@@ -58,7 +59,7 @@ class Opcodes(cpu: Cpu) {
   def opcode00EE(opcode: Int) =
     {
       cpu.pc = cpu.stack.last;
-      //cpu.stack.pop
+      cpu.stack.pop
     }
 
   // jump to address NNN
@@ -70,8 +71,8 @@ class Opcodes(cpu: Cpu) {
   // call subroutine NNN
   def opcode2NNN(opcode: Int) =
     {
+	  println("In 2NNN" + " " + cpu.pc.toHexString)
       cpu.stack.push(cpu.pc);
-      println("STACK" + cpu.stack.mkString)
       cpu.pc = opcode & 0x0FFF;
     }
 
@@ -115,7 +116,6 @@ class Opcodes(cpu: Cpu) {
       val nn = opcode & 0x00FF;
       var regx = opcode & 0x0F00;
       regx >>= 8;
-
       cpu.registers(regx).value = nn;
     }
 
@@ -126,7 +126,8 @@ class Opcodes(cpu: Cpu) {
       var regx = opcode & 0x0F00;
       regx >>= 8;
 
-      cpu.registers(regx).value += nn;
+      cpu.registers(regx) ++= nn;
+      //cpu.registers(regx).value &= 255
     }
 
   // set vx to vy
@@ -169,7 +170,6 @@ class Opcodes(cpu: Cpu) {
       regx >>= 8;
       var regy = opcode & 0x00F0;
       regy >>= 4;
-
       cpu.registers(regx).value = cpu.registers(regx).value ^ cpu.registers(regy).value;
     }
 
@@ -260,7 +260,8 @@ class Opcodes(cpu: Cpu) {
   // set I to nnn
   def opcodeANNN(opcode: Int) =
     {
-      cpu.registerI.value = opcode & 0x0FFF;
+
+      cpu.registerI.value = (opcode & 0x0FFF);
     }
 
   // jump to address NNN + V0
@@ -277,67 +278,40 @@ class Opcodes(cpu: Cpu) {
       val nn = opcode & 0x00FF;
       var regx = opcode & 0x0F00;
       regx >>= 8;
-
-      //cpu.registers(regx).value = rand() & nn ;
+      val r = new Random;
+      cpu.registers(regx).value = r.nextInt() & nn ;
     }
 
   def opcodeDXYN(opcode: Int) =
-  {
-  	val SCALE = 10
-  	var regx = opcode & 0x0F00 ;
-  	regx = regx >> 8 ;
-  	var regy = opcode & 0x00F0 ;
-  	regy = regy >> 4 ;
-  
-  	val coordx = cpu.registers(regx).value * SCALE;
-  	val coordy = cpu.registers(regy).value * SCALE ;
-  	val height = opcode & 0x000F ;
-  
-  	cpu.registers(0xF).value = 0 ;
-  
-  	  for (i <- 0 until height)
-  	{
-  		// this is the data of the sprite stored at m_GameMemory[cpu.registerI.value]
-  		// the data is stored as a line of bytes so each line is indexed by cpu.registerI.value + yline
-  		val data = (m_GameMemory[cpu.registerI.value+yline]);
-  
-  		// for each of the 8 pixels in the line
-  		val xpixel = 0 ;
-  		val xpixelinv = 7 ;
-  		for(xpixel = 0; xpixel < 8; xpixel++, xpixelinv--)
-  		{
-  			
-  			// is ths pixel set to 1? If so then the code needs to toggle its state
-  			int mask = 1 << xpixelinv ;
-  			if (data & mask)
-  			{
-  				int x = (xpixel*SCALE) + coordx ;
-  				int y = coordy + (yline*SCALE) ;
-  
-  				int colour = 0 ;
-  
-  				// a collision has been detected
-  				if (m_ScreenData[y][x][0] == 0)
-  				{
-  					colour = 255 ;
-  					m_Registers[15]=1;
-  				}
-  
-  				// colour the pixel
-  				for (int i = 0; i < SCALE; i++)
-  				{
-  					for (int j = 0; j < SCALE; j++)
-  					{
-  						m_ScreenData[y+i][x+j][0] = colour ;
-  						m_ScreenData[y+i][x+j][1] = colour ;
-  						m_ScreenData[y+i][x+j][2] = colour ;
-  					}
-  				}
-  
-  			}
-  		}
-  	}
-  }
+    {
+      var regx = opcode & 0x0F00;
+      regx = regx >> 8;
+      var regy = opcode & 0x00F0;
+      regy = regy >> 4;
+
+      val height = opcode & 0x000F
+      val coordx = cpu.registers(regx)
+      val coordy = cpu.registers(regy);
+
+      cpu.registers(0xF).value = 0
+      for (yline <- 0 until height) {
+        val data = cpu.memory.mem(cpu.registerI.value + yline)
+        var xpixelinv = 8;
+        for (xpixel <- 0 until 8) {
+          xpixelinv -= 1
+
+          val mask = 1 << xpixelinv;
+          if ((data & mask) != 0) {
+            val x = coordx + xpixel;
+            val y = coordy + yline;
+            if (cpu.gpu.screen(x)(y) == 1)
+              cpu.registers(0xF).value = 1
+              println("IN DRAW " + cpu.gpu.screen.s.mkString)
+            cpu.gpu.screen(x)(y) ^= 1;
+          }
+        }
+      }
+    }
 
   //	Skips the next instruction if the key stored in VX is pressed.
   def opcodeEX9E(opcode: Int) =
@@ -367,7 +341,7 @@ class Opcodes(cpu: Cpu) {
       var regx = opcode & 0x0F00;
       regx >>= 8;
 
-      //cpu.registers(regx).value = m_DelayTimer ;
+      cpu.registers(regx).value = cpu.timer;
     }
 
   // A key press is awaited, and then stored in VX.
@@ -394,7 +368,7 @@ class Opcodes(cpu: Cpu) {
       var regx = opcode & 0x0F00;
       regx >>= 8;
 
-      //m_DelayTimer = cpu.registers(regx).value ;
+      cpu.timer = cpu.registers(regx).value;
     }
 
   // sound to vx
@@ -445,11 +419,9 @@ class Opcodes(cpu: Cpu) {
     {
       var regx = opcode & 0x0F00;
       regx >>= 8;
-
-      for (i <- 0 until regx) {
-        cpu.registers(i).value = cpu.memory.mem(cpu.registerI.value + i)
+      for (i <- 0 to regx) {
+        cpu.memory.mem(cpu.registerI.value + i) = cpu.registers(i).value
       }
-
       cpu.registerI.value = cpu.registerI.value + regx + 1
     }
 
@@ -459,11 +431,9 @@ class Opcodes(cpu: Cpu) {
       var regx = opcode & 0x0F00;
       regx >>= 8;
 
-      for (i <- 0 until regx) {
+      for (i <- 0 to regx) {
         cpu.registers(i).value = cpu.memory.mem(cpu.registerI.value + i)
       }
-
       cpu.registerI.value = cpu.registerI.value + regx + 1
     }
-
 }

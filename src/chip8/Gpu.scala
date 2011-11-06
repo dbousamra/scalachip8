@@ -3,9 +3,9 @@ package chip8
 class Gpu {
 
   class Screen(x: Int, y: Int) {
-    val s = Array.ofDim[Boolean](x, y)
+    val s = Array.ofDim[Int](x, y)
     def apply(x: Int) = s(x)
-    def update(x: Int, y: Int, value: Boolean) { s(x)(y) = value }
+    def update(x: Int, y: Int, value: Int) { s(x)(y) = value }
   }
 
   val width = 64
@@ -16,6 +16,6 @@ class Gpu {
     for {
       rows <- screen.s.indices
       cols <- screen.s(rows).indices
-    } screen.s(rows)(cols) = false
+    } screen.s(rows)(cols) = 0
   }
 }

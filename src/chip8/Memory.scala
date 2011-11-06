@@ -6,7 +6,7 @@ class Memory(romFilename: String) {
 
   def loadRom(filename: String): Array[Int] = {
     val is = new FileInputStream(filename)
-    Array.concat(Array.fill(0x200)(0), Stream.continually(is.read).takeWhile(-1 !=).toArray)
+    Array.concat(Array.fill(0x200)(0), Stream.continually(is.read).takeWhile(-1 !=).toArray).padTo(0xFFF, 0)
   }
 
 }

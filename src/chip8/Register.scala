@@ -6,16 +6,16 @@ class Register(private var _value:Int = 0) {
   def hex : String = value.toHexString
   def +(i:Int) = new Register(value + i)
   def :=(i:Int) = value = i
-  def +=(i:Int) = value += i
-  def -=(i:Int) = value -= i
+  def +=(i:Int) = value = (value + i) & 255
+  def -=(i:Int) = value -= (value - i) & 255
   def ==(i:Int) = value == i
-  def <<(i:Int) = value << i
-  def >>(i:Int) = value >> i
-  def &=(i:Int) = value &= i
-  def |=(i:Int) = value |= i
-  def ^=(i:Int) = value ^= i
+  def <<(i:Int) = value << (value << i) & 255
+  def >>(i:Int) = value >> (value >> i) & 255
+  def &=(i:Int) = value &= (value & i) & 255
+  def |=(i:Int) = value |= (value | i) & 255
+  def ^=(i:Int) = value ^= (value - i) & 255
 }
 
 object Register {
-	implicit def reg2int(r:Register):Int = r.value
+	implicit def reg2int(r:Register):Int = r.value 
 }
