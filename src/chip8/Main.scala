@@ -11,7 +11,7 @@ object Main {
 	val mod = 8
     emulator = new Screen
     val frame = new javax.swing.JFrame("scalachip8")
-    frame.setPreferredSize(new Dimension(mod * 64, mod * 32))
+    frame.setPreferredSize(new Dimension(mod * 64, mod * 40))
     frame.getContentPane().add(emulator)
     emulator.init
     frame.pack
@@ -21,13 +21,13 @@ object Main {
 }
 
 class Screen extends PApplet {
-  val romFilename = "roms/WIPEOFF"
+  val romFilename = "roms/INVADERS"
   val runner: Cpu = new Cpu(romFilename, DEBUG_MODE = true)
   val mod = 8
 
   override def setup() = {
     runner.reset
-    size(mod*64, mod*32)
+    size(mod*64, mod*40)
     background(0)
     smooth()
     noStroke()
@@ -36,6 +36,7 @@ class Screen extends PApplet {
 
   override def draw() = {
     stroke(0)
+    background(0)
     
     def drawLines(cpu: Cpu) = {
       for (x <- 0 until 64) {

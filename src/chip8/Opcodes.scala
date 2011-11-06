@@ -71,7 +71,6 @@ class Opcodes(cpu: Cpu) {
   // call subroutine NNN
   def opcode2NNN(opcode: Int) =
     {
-	  println("In 2NNN" + " " + cpu.pc.toHexString)
       cpu.stack.push(cpu.pc);
       cpu.pc = opcode & 0x0FFF;
     }
@@ -125,9 +124,7 @@ class Opcodes(cpu: Cpu) {
       val nn = opcode & 0x00FF;
       var regx = opcode & 0x0F00;
       regx >>= 8;
-
-      cpu.registers(regx) ++= nn;
-      //cpu.registers(regx).value &= 255
+      cpu.registers(regx) += nn;
     }
 
   // set vx to vy
@@ -279,60 +276,97 @@ class Opcodes(cpu: Cpu) {
       var regx = opcode & 0x0F00;
       regx >>= 8;
       val r = new Random;
-      cpu.registers(regx).value = r.nextInt() & nn ;
+      cpu.registers(regx).value = r.nextInt() & nn;
     }
 
-  def opcodeDXYN(opcode: Int) =
-    {
-      var regx = opcode & 0x0F00;
-      regx = regx >> 8;
-      var regy = opcode & 0x00F0;
-      regy = regy >> 4;
+  def opcodeDXYN(opcode: Int) = {
 
-      val height = opcode & 0x000F
-      val coordx = cpu.registers(regx)
-      val coordy = cpu.registers(regy);
+    var regx = opcode & 0x0F00;
+    regx = regx >> 8;
+    var regy = opcode & 0x00F0;
+    regy = regy >> 4;
 
-      cpu.registers(0xF).value = 0
-      for (yline <- 0 until height) {
-        val data = cpu.memory.mem(cpu.registerI.value + yline)
-        var xpixelinv = 8;
-        for (xpixel <- 0 until 8) {
-          xpixelinv -= 1
+    val height = opcode & 0x000F
 
-          val mask = 1 << xpixelinv;
-          if ((data & mask) != 0) {
-            val x = coordx + xpixel;
-            val y = coordy + yline;
-            if (cpu.gpu.screen(x)(y) == 1)
-              cpu.registers(0xF).value = 1
-              println("IN DRAW " + cpu.gpu.screen.s.mkString)
-            cpu.gpu.screen(x)(y) ^= 1;
+    val coordx = cpu.registers(regx).value;
+    val coordy = cpu.registers(regy).value;
+
+    cpu.registers(0xF).value = 0
+
+    // loop for the amount of vertical lines needed to draw
+
+    for (yline <- 0 until height) {
+      val data = cpu.memory.mem(cpu.registerI + yline)
+      var xpixelinv = 8;
+      val xpixel = 0;
+      for (xpixel <- 0 until 8) {
+        xpixelinv -= 1
+        val mask = 1 << xpixelinv;
+        if ((data & mask) != 0) {
+          val x = coordx + xpixel;
+          val y = coordy + yline;
+          if (cpu.gpu.screen(x)(y) == 1) {
+            cpu.registers(0xF).value = 1
           }
+          cpu.gpu.screen(x)(y) ^= 1;
         }
       }
     }
+  }
+
+  //  def opcodeDXYN(opcode: Int) =
+  //    {
+  //      var regx = opcode & 0x0F00;
+  //      regx = regx >> 8;
+  //      var regy = opcode & 0x00F0;
+  //      regy = regy >> 4;
+  //
+  //      val height = opcode & 0x000F
+  //      val coordx = cpu.registers(regx)
+  //      val coordy = cpu.registers(regy);
+  //
+  //      cpu.registers(0xF).value = 0
+  //      for (yline <- 0 until height) {
+  //        val data = cpu.memory.mem(cpu.registerI.value + yline)
+  //        var xpixelinv = 8;
+  //        for (xpixel <- 0 until 8) {
+  //          xpixelinv -= 1
+  //
+  //          val mask = 1 << xpixelinv;
+  //          if ((data & mask) != 0) {
+  //            val x = coordx + xpixel;
+  //            val y = coordy + yline;
+  //            if (cpu.gpu.screen(x)(y) == 1)
+  //              cpu.registers(0xF).value = 1
+  //            cpu.gpu.screen(x)(y) ^= 1;
+  //          }
+  //        }
+  //      }
+  //    }
 
   //	Skips the next instruction if the key stored in VX is pressed.
   def opcodeEX9E(opcode: Int) =
     {
+      println("IN EX9E")
       var regx = opcode & 0x0F00;
       regx >>= 8;
       //	int key = cpu.registers(regx).value ;
       //
       //	if (m_KeyState[key] == 1)
-      //		cpu.pc+=2 ;
+      cpu.pc += 2;
     }
 
   // Skips the next instruction if the key stored in VX isn't pressed.
   def opcodeEXA1(opcode: Int) =
     {
+      println("IN EXA1")
       var regx = opcode & 0x0F00;
       regx >>= 8;
-      //	int key = cpu.registers(regx).value ;
-      //
-      //	if (m_KeyState[key] == 0)
-      //		cpu.pc+=2 ;
+      //val key = cpu.registers(regx).value ;
+      val key = 1
+
+      //if (m_KeyState[key] == 0)
+      cpu.pc += 2;
     }
 
   // Sets VX to the value of the delay timer.
@@ -347,8 +381,9 @@ class Opcodes(cpu: Cpu) {
   // A key press is awaited, and then stored in VX.
   def opcodeFX0A(opcode: Int) =
     {
-      //	var regx = opcode & 0x0F00 ;
-      //	regx >>= 8 ;
+      println("IN FX0A")
+      var regx = opcode & 0x0F00;
+      regx >>= 8;
       //
       //	int keypressed = GetKeyPressed( ) ;
       //
