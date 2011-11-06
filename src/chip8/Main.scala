@@ -21,7 +21,7 @@ object Main {
 }
 
 class Screen extends PApplet {
-  val romFilename = "roms/INVADERS"
+  val romFilename = "roms/VBRIX"
   val runner: Cpu = new Cpu(romFilename, DEBUG_MODE = true)
   val mod = 8
 

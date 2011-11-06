@@ -52,7 +52,7 @@ class Opcodes(cpu: Cpu) {
   }
 
   def clearScreen(opcode: Int) = {
-
+    cpu.gpu.reset
   }
 
   /// return from subroutine
