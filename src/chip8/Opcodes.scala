@@ -74,97 +74,52 @@ class Opcodes(cpu: Cpu) {
 
   def opcode3XNN(opcode: Int) =
     {
-      val nn = opcode & 0x00FF
-      var regx = opcode & 0x0F00
-      regx >>= 8
-
-      if (cpu.registers(regx).value == nn)
+      if (cpu.registers((opcode & 0x0F00) >> 8).value == (opcode & 0x00FF))
         cpu.pc += 2
     }
 
   def opcode4XNN(opcode: Int) =
     {
-      val nn = opcode & 0x00FF
-      var regx = opcode & 0x0F00
-      regx >>= 8
-
-      if (cpu.registers(regx).value != nn)
+      if (cpu.registers((opcode & 0x0F00) >> 8).value != (opcode & 0X00FF))
         cpu.pc += 2
     }
 
   def opcode5XY0(opcode: Int) =
     {
-      var regx = opcode & 0x0F00
-      regx >>= 8
-      var regy = opcode & 0x00F0
-      regy >>= 4
-
-      if (cpu.registers(regx).value == cpu.registers(regy).value)
+      if (cpu.registers((opcode & 0x0F00) >> 8).value == cpu.registers((opcode & 0x00F0) >> 4).value)
         cpu.pc += 2
     }
 
-  def opcode6XNN(opcode: Int) =
-    {
-      val nn = opcode & 0x00FF
-      var regx = opcode & 0x0F00
-      regx >>= 8
-      cpu.registers(regx).value = nn
-    }
+  def opcode6XNN(opcode: Int) = cpu.registers((opcode & 0x0F00) >> 8).value = (opcode & 0x00FF)
 
-  def opcode7XNN(opcode: Int) =
-    {
-      val nn = opcode & 0x00FF
-      var regx = opcode & 0x0F00
-      regx >>= 8
-      cpu.registers(regx) += nn
-    }
+  def opcode7XNN(opcode: Int) = cpu.registers((opcode & 0x0F00) >> 8) += (opcode & 0x00FF)
 
-  def opcode8XY0(opcode: Int) =
-    {
-      var regx = opcode & 0x0F00
-      regx >>= 8
-      var regy = opcode & 0x00F0
-      regy >>= 4
-
-      cpu.registers(regx).value = cpu.registers(regy).value
-    }
+  def opcode8XY0(opcode: Int) = cpu.registers((opcode & 0x0F00) >> 8).value = cpu.registers((opcode & 0x00F0) >> 4).value
 
   def opcode8XY1(opcode: Int) =
     {
-      var regx = opcode & 0x0F00
-      regx >>= 8
-      var regy = opcode & 0x00F0
-      regy >>= 4
-
-      cpu.registers(regx).value = cpu.registers(regx).value | cpu.registers(regy).value
+      val regx = (opcode & 0x0F00) >> 8
+      cpu.registers(regx).value = cpu.registers(regx).value | cpu.registers((opcode & 0x00F0) >> 4).value
     }
 
   def opcode8XY2(opcode: Int) =
     {
-      var regx = opcode & 0x0F00
-      regx >>= 8
-      var regy = opcode & 0x00F0
-      regy >>= 4
-
-      cpu.registers(regx).value = cpu.registers(regx).value & cpu.registers(regy).value
+      val regx = (opcode & 0x0F00) >> 8
+      cpu.registers(regx).value = cpu.registers(regx).value & cpu.registers((opcode & 0x00F0) >> 4).value
     }
 
   def opcode8XY3(opcode: Int) =
     {
-      var regx = opcode & 0x0F00
-      regx >>= 8
-      var regy = opcode & 0x00F0
-      regy >>= 4
+      val regx = (opcode & 0x0F00) >> 8
+      val regy = (opcode & 0x00F0) >> 4
       cpu.registers(regx).value = cpu.registers(regx).value ^ cpu.registers(regy).value
     }
 
   def opcode8XY4(opcode: Int) =
     {
       cpu.registers(0xF).value = 0
-      var regx = opcode & 0x0F00
-      regx >>= 8
-      var regy = opcode & 0x00F0
-      regy >>= 4
+      val regx = (opcode & 0x0F00) >> 8
+      val regy = (opcode & 0x00F0) >> 4
 
       val value = cpu.registers(regx).value + cpu.registers(regy).value
 
@@ -191,11 +146,8 @@ class Opcodes(cpu: Cpu) {
 
   def opcode8XY6(opcode: Int) =
     {
-      var regx = opcode & 0x0F00
-      regx >>= 8
-
-      cpu.registers(0xF).value = cpu.registers(regx).value & 0x1
-      cpu.registers(regx).value >>= 1
+      cpu.registers(0xF).value = cpu.registers((opcode & 0x0F00) >> 8).value & 0x1
+      cpu.registers((opcode & 0x0F00) >> 8).value >>= 1
     }
 
   def opcode8XY7(opcode: Int) =
@@ -236,26 +188,18 @@ class Opcodes(cpu: Cpu) {
         cpu.pc += 2
     }
 
-  def opcodeANNN(opcode: Int) =
-    {
-
-      cpu.registerI.value = (opcode & 0x0FFF)
-    }
+  def opcodeANNN(opcode: Int) = cpu.registerI.value = (opcode & 0x0FFF)
 
   def opcodeBNNN(opcode: Int) =
     {
-      val nnn = opcode & 0x0FFF
-      cpu.pc = cpu.registers(0).value + nnn
+      cpu.pc = cpu.registers(0).value + opcode & 0x0FFF
       cpu.registers(0).value
     }
 
   def opcodeCXNN(opcode: Int) =
     {
-      val nn = opcode & 0x00FF
-      var regx = opcode & 0x0F00
-      regx >>= 8
       val r = new Random
-      cpu.registers(regx).value = r.nextInt() & nn
+      cpu.registers((opcode & 0x0F00) >> 8).value = r.nextInt() & (opcode & 0x00FF)
     }
 
   def opcodeDXYN(opcode: Int) = {
@@ -263,23 +207,6 @@ class Opcodes(cpu: Cpu) {
     val coordx = cpu.registers((opcode & 0x0F00) >> 8).value
     val coordy = cpu.registers((opcode & 0x00F0) >> 4).value
     cpu.registers(0xF).value = 0
-    //
-    //    var pixel = 0
-    //    println(height)
-    //    for (yline <- 0 until height) {
-    //      pixel = cpu.memory.mem(cpu.registerI.value + yline)
-    //      for (xline <- 0 until 8) {
-    //        if ((pixel & (0x80 >> xline)) != 0) {
-    //          if (((coordx + xline) < 64) && ((coordy + yline) < 32)) {
-    //             if (cpu.gpu.screen(coordx + xline)(coordy + yline) == 1) {
-    //            cpu.registers(0xF).value = 1
-    //          }
-    //          cpu.gpu.screen(coordx + xline)(coordy + yline) ^= 1
-    //          }
-    //        }
-    //      }
-    //    }
-
     for (yline <- 0 until height) {
       val data = cpu.memory.mem(cpu.registerI + yline)
       var xpixelinv = 8
@@ -290,12 +217,10 @@ class Opcodes(cpu: Cpu) {
         if ((data & mask) != 0) {
           val x = coordx + xpixel
           val y = coordy + yline
-          if ((x < 64) && (y < 32)) {
-            if (cpu.gpu.screen(x)(y) == 1) {
-              cpu.registers(0xF).value = 1
-            }
-            cpu.gpu.screen(x)(y) ^= 1
+          if (cpu.gpu.screen(x & 64)(y & 32) == 1) {
+            cpu.registers(0xF).value = 1
           }
+          cpu.gpu.screen(x)(y) ^= 1
         }
       }
     }
@@ -303,7 +228,6 @@ class Opcodes(cpu: Cpu) {
 
   def opcodeEX9E(opcode: Int) =
     {
-      println("IN EX9E")
       var regx = opcode & 0x0F00
       regx >>= 8
       //	int key = cpu.registers(regx).value 
@@ -314,9 +238,7 @@ class Opcodes(cpu: Cpu) {
 
   def opcodeEXA1(opcode: Int) =
     {
-      println("IN EXA1")
-      var regx = opcode & 0x0F00
-      regx >>= 8
+      val regx = (opcode & 0x0F00) >> 8
       //val key = cpu.registers(regx).value 
       val key = 1
 
@@ -324,19 +246,11 @@ class Opcodes(cpu: Cpu) {
       cpu.pc += 2
     }
 
-  def opcodeFX07(opcode: Int) =
-    {
-      var regx = opcode & 0x0F00
-      regx >>= 8
-
-      cpu.registers(regx).value = cpu.timer
-    }
+  def opcodeFX07(opcode: Int) = cpu.registers((opcode & 0x0F00) >> 8).value = cpu.timer
 
   def opcodeFX0A(opcode: Int) =
     {
-      println("IN FX0A")
-      var regx = opcode & 0x0F00
-      regx >>= 8
+      var regx = (opcode & 0x0F00) >> 8
       //
       //	int keypressed = GetKeyPressed( ) 
       //
@@ -350,44 +264,22 @@ class Opcodes(cpu: Cpu) {
       //	}
     }
 
-  def opcodeFX15(opcode: Int) =
-    {
-      var regx = opcode & 0x0F00
-      regx >>= 8
-
-      cpu.timer = cpu.registers(regx).value
-    }
+  def opcodeFX15(opcode: Int) = cpu.timer = cpu.registers((opcode & 0x0F00) >> 8).value
 
   def opcodeFX18(opcode: Int) =
     {
-      var regx = opcode & 0x0F00
-      regx >>= 8
+      var regx = (opcode & 0x0F00) >> 8
 
       //m_SoundTimer = cpu.registers(regx).value 
     }
 
-  def opcodeFX1E(opcode: Int) =
-    {
-      var regx = opcode & 0x0F00
-      regx >>= 8
+  def opcodeFX1E(opcode: Int) = cpu.registerI.value += cpu.registers((opcode & 0x0F00) >> 8).value
 
-      cpu.registerI.value += cpu.registers(regx).value
-    }
-
-  def opcodeFX29(opcode: Int) =
-    {
-      var regx = opcode & 0x0F00
-      regx >>= 8
-      cpu.registerI.value = cpu.registers(regx).value * 5
-    }
+  def opcodeFX29(opcode: Int) = cpu.registerI.value = cpu.registers((opcode & 0x0F00) >> 8).value * 5
 
   def opcodeFX33(opcode: Int) =
     {
-      var regx = opcode & 0x0F00
-      regx >>= 8
-
-      val value = cpu.registers(regx).value
-
+      val value = cpu.registers((opcode & 0x0F00) >> 8).value
       val hundreds = value / 100
       val tens = (value / 10) % 10
       val units = value % 10
@@ -399,8 +291,7 @@ class Opcodes(cpu: Cpu) {
 
   def opcodeFX55(opcode: Int) =
     {
-      var regx = opcode & 0x0F00
-      regx >>= 8
+      var regx = (opcode & 0x0F00) >> 8
       for (i <- 0 to regx) {
         cpu.memory.mem(cpu.registerI.value + i) = cpu.registers(i).value
       }
@@ -409,9 +300,7 @@ class Opcodes(cpu: Cpu) {
 
   def opcodeFX65(opcode: Int) =
     {
-      var regx = opcode & 0x0F00
-      regx >>= 8
-
+      val regx = opcode & 0x0F00 >> 8
       for (i <- 0 to regx) {
         cpu.registers(i).value = cpu.memory.mem(cpu.registerI.value + i)
       }

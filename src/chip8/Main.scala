@@ -11,7 +11,7 @@ object Main {
 	val mod = 10
     emulator = new Screen
     val frame = new javax.swing.JFrame("scalachip8")
-    frame.setPreferredSize(new Dimension(mod * 64, mod * 32))
+    frame.setPreferredSize(new Dimension(mod * 64, mod * 34))
     frame.getContentPane().add(emulator)
     emulator.init
     frame.pack
@@ -21,7 +21,7 @@ object Main {
 }
 
 class Screen extends PApplet {
-  val romFilename = "roms/chip8/BLINKY"
+  val romFilename = "roms/chip8/MERLIN"
   val runner: Cpu = new Cpu(romFilename, DEBUG_MODE = true)
   val mod = 10
 

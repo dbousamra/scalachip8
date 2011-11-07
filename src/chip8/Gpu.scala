@@ -8,8 +8,8 @@ class Gpu {
     def update(x: Int, y: Int, value: Int) { s(x)(y) = value }
   }
 
-  val width = 64
-  val height = 32
+  val width = 65
+  val height = 33	
   val screen = new Screen(width, height)
 
   def reset() = {
