@@ -21,7 +21,7 @@ object Main {
 }
 
 class Screen extends PApplet {
-  val romFilename = "roms/chip8/MERLIN"
+  val romFilename = "roms/chip8/TETRIS"
   val runner: Cpu = new Cpu(romFilename, DEBUG_MODE = true)
   val mod = 10
 

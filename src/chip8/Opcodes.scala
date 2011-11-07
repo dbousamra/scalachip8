@@ -207,6 +207,7 @@ class Opcodes(cpu: Cpu) {
     val coordx = cpu.registers((opcode & 0x0F00) >> 8).value
     val coordy = cpu.registers((opcode & 0x00F0) >> 4).value
     cpu.registers(0xF).value = 0
+
     for (yline <- 0 until height) {
       val data = cpu.memory.mem(cpu.registerI + yline)
       var xpixelinv = 8
@@ -217,10 +218,12 @@ class Opcodes(cpu: Cpu) {
         if ((data & mask) != 0) {
           val x = coordx + xpixel
           val y = coordy + yline
-          if (cpu.gpu.screen(x & 64)(y & 32) == 1) {
-            cpu.registers(0xF).value = 1
+          if ((x < 64) && (y < 32)) {
+            if (cpu.gpu.screen(x)(y) == 1) {
+              cpu.registers(0xF).value = 1
+            }
+            cpu.gpu.screen(x)(y) ^= 1
           }
-          cpu.gpu.screen(x)(y) ^= 1
         }
       }
     }
@@ -230,19 +233,12 @@ class Opcodes(cpu: Cpu) {
     {
       var regx = opcode & 0x0F00
       regx >>= 8
-      //	int key = cpu.registers(regx).value 
-      //
-      //	if (m_KeyState[key] == 1)
       cpu.pc += 2
     }
 
   def opcodeEXA1(opcode: Int) =
     {
       val regx = (opcode & 0x0F00) >> 8
-      //val key = cpu.registers(regx).value 
-      val key = 1
-
-      //if (m_KeyState[key] == 0)
       cpu.pc += 2
     }
 
@@ -250,18 +246,9 @@ class Opcodes(cpu: Cpu) {
 
   def opcodeFX0A(opcode: Int) =
     {
-      var regx = (opcode & 0x0F00) >> 8
-      //
-      //	int keypressed = GetKeyPressed( ) 
-      //
-      //	if (keypressed == -1)
-      //	{
-      //		cpu.pc -= 2 
-      //	}
-      //	else
-      //	{
-      //		//cpu.registers(regx).value = keypressed 
-      //	}
+      var regx = opcode & 0x0F00
+      regx >>= 8
+
     }
 
   def opcodeFX15(opcode: Int) = cpu.timer = cpu.registers((opcode & 0x0F00) >> 8).value
@@ -269,8 +256,6 @@ class Opcodes(cpu: Cpu) {
   def opcodeFX18(opcode: Int) =
     {
       var regx = (opcode & 0x0F00) >> 8
-
-      //m_SoundTimer = cpu.registers(regx).value 
     }
 
   def opcodeFX1E(opcode: Int) = cpu.registerI.value += cpu.registers((opcode & 0x0F00) >> 8).value
