@@ -17,9 +17,8 @@ class Cpu(romFilename: String, DEBUG_MODE: Boolean) {
 
   def emulate = {
     import Register._
-    //Thread.sleep(10);
     val nextOpc = nextOpcode
-    println(pc.toHexString + " " + nextOpc.toHexString + " Registers: " + " RegI: " + registerI.value.toHexString + " " + debug)
+    //println(pc.toHexString + " " + nextOpc.toHexString + " Registers: " + " RegI: " + registerI.value.toHexString + " " + debug)
     opcodes.decode(nextOpc)
   }
 
